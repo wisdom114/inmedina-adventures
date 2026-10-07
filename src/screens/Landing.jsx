@@ -2,7 +2,7 @@ import Star from '../components/Star.jsx'
 import Skyline from '../components/Skyline.jsx'
 import Ornament from '../components/Ornament.jsx'
 
-export default function Landing({ onBegin }) {
+export default function Landing({ userName, configError, onBegin, onSignOut }) {
   return (
     <main className="landing">
       <header className="hero">
@@ -22,9 +22,25 @@ export default function Landing({ onBegin }) {
           A guided scavenger hunt around Masjid al-Nabawi. Follow the clues, uncover the stories
           of the Prophet’s ﷺ city, and discover Medina together as a team.
         </p>
-        <button className="btn btn-gold" onClick={onBegin}>
-          Begin Adventure
-        </button>
+
+        <div className="landing-actions">
+          {configError && (
+            <p className="feedback feedback-wrong">
+              The app isn’t connected to its database yet (missing Supabase keys).
+            </p>
+          )}
+          <button className="btn btn-gold" onClick={onBegin} disabled={configError}>
+            Begin Adventure
+          </button>
+          {userName && (
+            <p className="landing-account">
+              Signed in as <strong>{userName}</strong> ·{' '}
+              <button className="link-btn" onClick={onSignOut}>
+                Sign out
+              </button>
+            </p>
+          )}
+        </div>
       </section>
     </main>
   )

@@ -15,6 +15,8 @@ export default function Finish({
   solved,
   total,
   elapsed,
+  leaderboardStatus,
+  onRetryLeaderboard,
   onRestart,
 }) {
   // Split the phrase into words, numbering boxes 1–19 across them.
@@ -148,6 +150,20 @@ export default function Finish({
             <span>{total} pts</span>
           </div>
         </section>
+
+        <p className={`leaderboard-status is-${leaderboardStatus}`} aria-live="polite">
+          {leaderboardStatus === 'saved' && '✓ Your score and time are on the leaderboard'}
+          {(leaderboardStatus === 'saving' || leaderboardStatus === 'idle') &&
+            'Saving to the leaderboard…'}
+          {leaderboardStatus === 'error' && (
+            <>
+              Couldn’t save to the leaderboard.{' '}
+              <button className="link-btn" onClick={onRetryLeaderboard}>
+                Try again
+              </button>
+            </>
+          )}
+        </p>
 
         <Ornament />
         <p className="finish-dua">

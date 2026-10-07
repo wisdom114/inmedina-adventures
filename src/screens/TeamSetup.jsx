@@ -6,6 +6,7 @@ export default function TeamSetup({ onBack, onReady }) {
   const [teamName, setTeamName] = useState('')
   const [members, setMembers] = useState(['', ''])
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
   const filledMembers = members.map((m) => m.trim()).filter(Boolean)
   const canStart = teamName.trim() && filledMembers.length > 0 && !submitting
@@ -22,7 +23,14 @@ export default function TeamSetup({ onBack, onReady }) {
     e.preventDefault()
     if (!canStart) return
     setSubmitting(true)
-    await onReady(teamName.trim(), filledMembers)
+    setError('')
+    try {
+      await onReady(teamName.trim(), filledMembers)
+    } catch (err) {
+      console.error('Could not create game:', err)
+      setError('Could not save your team. Check your connection and try again.')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -83,6 +91,8 @@ export default function TeamSetup({ onBack, onReady }) {
             </button>
           )}
         </div>
+
+        {error && <p className="feedback feedback-wrong">{error}</p>}
 
         <button type="submit" className="btn btn-green" disabled={!canStart}>
           {submitting ? 'Starting…' : 'Start the Hunt'}

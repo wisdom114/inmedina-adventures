@@ -3,38 +3,92 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// If keys aren't set yet, supabase is null and the app runs without saving.
-export const supabase = url && key ? createClient(url, key) : null
+export const supabaseConfigured = Boolean(url && key)
+export const supabase = supabaseConfigured ? createClient(url, key) : null
 
-export async function createTeam(teamName, members) {
-  if (!supabase) return null
-  const { data, error } = await supabase
-    .from('teams')
-    .insert({ name: teamName, members })
+function requireClient() {
+  if (!supabase) throw new Error('Supabase is not configured. Add your keys to the .env file.')
+  return supabase
+}
+
+// ── Auth ────────────────────────────────────────────────────
+
+export async function signUp({ name, email, password }) {
+  const { data, error } = await requireClient().auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: name },
+      // Where the confirmation email link sends people back to.
+      emailRedirectTo: window.location.origin,
+    },
+  })
+  if (error) throw error
+  // No session means the project requires email confirmation first.
+  return { needsConfirmation: !data.session }
+}
+
+export async function signIn({ email, password }) {
+  const { error } = await requireClient().auth.signInWithPassword({ email, password })
+  if (error) throw error
+}
+
+export async function signOut() {
+  await requireClient().auth.signOut()
+}
+
+export function displayName(user) {
+  return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player'
+}
+
+// ── Games (one row per hunt, owned by the signed-in user) ──
+
+export async function createGame(teamName, members) {
+  const { data, error } = await requireClient()
+    .from('games')
+    .insert({ team_name: teamName, members })
     .select('id')
     .single()
-  if (error) {
-    console.error('Could not save team:', error.message)
-    return null
-  }
+  if (error) throw error
   return data.id
 }
 
-// Called when the team taps Start Hunt — the official start of their timer.
-export async function markHuntStarted(teamId, startedAt) {
-  if (!supabase || !teamId) return
-  const { error } = await supabase
-    .from('teams')
-    .update({ started_at: new Date(startedAt).toISOString() })
-    .eq('id', teamId)
-  if (error) console.error('Could not save start time:', error.message)
+export async function updateGame(gameId, fields) {
+  if (!gameId) return
+  const { error } = await requireClient().from('games').update(fields).eq('id', gameId)
+  if (error) console.error('Could not save progress:', error.message)
 }
 
-export async function saveProgress(teamId, clueIndex, { finished = false, points } = {}) {
-  if (!supabase || !teamId) return
-  const update = { current_clue: clueIndex }
-  if (finished) update.completed_at = new Date().toISOString()
-  if (points !== undefined) update.points = points
-  const { error } = await supabase.from('teams').update(update).eq('id', teamId)
-  if (error) console.error('Could not save progress:', error.message)
+// The signed-in user's most recent unfinished hunt, if any.
+export async function loadActiveGame() {
+  const { data, error } = await requireClient()
+    .from('games')
+    .select('*')
+    .is('finished_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) {
+    console.error('Could not load saved game:', error.message)
+    return null
+  }
+  return data
+}
+
+// ── Leaderboard ─────────────────────────────────────────────
+
+export async function submitToLeaderboard({ gameId, playerName, teamName, score, timeSeconds }) {
+  const { error } = await requireClient()
+    .from('leaderboard')
+    .upsert(
+      {
+        game_id: gameId,
+        player_name: playerName,
+        team_name: teamName,
+        score,
+        time_seconds: timeSeconds,
+      },
+      { onConflict: 'game_id', ignoreDuplicates: true }
+    )
+  if (error) throw error
 }

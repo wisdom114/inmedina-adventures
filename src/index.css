@@ -148,10 +148,6 @@ p {
   color: var(--ink);
 }
 
-.landing-body .btn {
-  margin-top: auto;
-}
-
 /* ── Decorative divider ───────────────────────────── */
 
 .ornament {
@@ -353,7 +349,9 @@ p {
   color: var(--ink);
 }
 
-input[type='text'] {
+input[type='text'],
+input[type='email'],
+input[type='password'] {
   width: 100%;
   min-height: 48px;
   padding: 12px 14px;
@@ -367,7 +365,9 @@ input[type='text'] {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-input[type='text']:focus {
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(212, 166, 70, 0.25);
   background: #fff;
@@ -1456,4 +1456,74 @@ input[type='text']:disabled {
   .confetti {
     display: none;
   }
+}
+
+/* ── Accounts ─────────────────────────────────────── */
+
+.app-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.loading-star {
+  color: var(--gold);
+  animation: loading-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%, 100% { opacity: 0.35; transform: rotate(0deg) scale(0.95); }
+  50% { opacity: 1; transform: rotate(22.5deg) scale(1); }
+}
+
+.landing-actions {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.landing-account {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.landing-account .link-btn {
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-notice {
+  padding: 12px 14px;
+  border: 1px solid var(--gold);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--gold-pale);
+  color: var(--green-ink);
+  font-size: 15px;
+}
+
+.auth-error {
+  margin-top: -4px;
+}
+
+.auth-switch {
+  text-align: center;
+  color: var(--muted);
+}
+
+.leaderboard-status {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.leaderboard-status.is-saved {
+  color: var(--green);
+}
+
+.leaderboard-status.is-error {
+  color: var(--red);
 }
