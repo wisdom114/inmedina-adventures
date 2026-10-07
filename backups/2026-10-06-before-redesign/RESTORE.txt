@@ -1,0 +1,4 @@
+﻿Backup of the app before the historic/heritage redesign (6 Oct 2026).
+
+To restore: copy the 'src' folder and 'index.html' from this folder back
+over the ones in the project root (replace when asked), then refresh the app.
