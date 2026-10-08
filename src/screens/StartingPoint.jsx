@@ -1,6 +1,6 @@
 import Star from '../components/Star.jsx'
 
-export default function StartingPoint({ teamName, onStart }) {
+export default function StartingPoint({ teamName, notice, onStart }) {
   return (
     <main className="screen">
       <header className="screen-header">
@@ -8,6 +8,8 @@ export default function StartingPoint({ teamName, onStart }) {
         <h2>Your Adventure Begins</h2>
         {teamName && <p className="muted">Bismillah, {teamName}.</p>}
       </header>
+
+      {notice}
 
       <section className="card card-manuscript start-card">
         <Star size={44} className="start-star" />

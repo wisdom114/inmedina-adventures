@@ -55,8 +55,32 @@ export async function createGame(teamName, members) {
 
 export async function updateGame(gameId, fields) {
   if (!gameId) return
-  const { error } = await requireClient().from('games').update(fields).eq('id', gameId)
+  const db = requireClient()
+  let { error } = await db.from('games').update(fields).eq('id', gameId)
+  // Database not yet updated with the `timer` column: save everything else.
+  if (error && 'timer' in fields && /timer/i.test(error.message)) {
+    console.warn('games.timer column missing — re-run supabase/schema.sql to save the timer.')
+    const { timer: _skip, ...rest } = fields
+    if (Object.keys(rest).length === 0) return
+    ;({ error } = await db.from('games').update(rest).eq('id', gameId))
+  }
   if (error) console.error('Could not save progress:', error.message)
+}
+
+// Player chose "Start a new game instead": remove the unfinished game for good.
+// Returns true if it was deleted.
+export async function deleteGame(gameId) {
+  if (!gameId) return false
+  const { data, error } = await requireClient().from('games').delete().eq('id', gameId).select('id')
+  if (error) {
+    console.error('Could not delete game:', error.message)
+    return false
+  }
+  if (!data?.length) {
+    console.warn('Game not deleted — re-run supabase/schema.sql to allow players to delete their games.')
+    return false
+  }
+  return true
 }
 
 // Returns { ok, game }. game is the hunt to resume: the signed-in user's LATEST game, only if it isn't finished.

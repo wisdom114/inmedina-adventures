@@ -6,12 +6,15 @@ import {
   supabaseConfigured,
   createGame,
   updateGame,
+  deleteGame,
   loadActiveGame,
   submitToLeaderboard,
   signOut,
   displayName,
 } from './lib/supabase.js'
+import { HEARTBEAT_MS, elapsedMs, heartbeat, isRunning, newTimer, pause, resumeAfterReopen } from './lib/timer.js'
 import Star from './components/Star.jsx'
+import ResumeBanner from './components/ResumeBanner.jsx'
 import Landing from './screens/Landing.jsx'
 import AuthScreen from './screens/AuthScreen.jsx'
 import HowItWorks from './screens/HowItWorks.jsx'
@@ -20,7 +23,8 @@ import StartingPoint from './screens/StartingPoint.jsx'
 import ClueScreen from './screens/ClueScreen.jsx'
 import Finish from './screens/Finish.jsx'
 
-const STORAGE_PREFIX = 'inmedina-adventure-v3'
+// v4: timer now stored as active play time; older cached games (and their start times) are dropped.
+const STORAGE_PREFIX = 'inmedina-adventure-v4'
 const PHRASE_LETTERS = MYSTERY_PHRASE.replace(/\s/g, '')
 const SIGNED_IN_SCREENS = ['how', 'team', 'start', 'clue', 'finish']
 
@@ -31,10 +35,18 @@ const EMPTY_GAME = {
   team: null, // { id, name, members } — id is the Supabase games row
   clueIndex: 0,
   results: {},
-  startedAt: null,
+  startedAt: null, // wall-clock moment Start Hunt was tapped (for records only)
   finishedAt: null,
+  timer: null, // active play time — see lib/timer.js. null until Start Hunt.
   leaderboard: 'idle', // idle | saving | saved | error
 }
+
+// Remove progress cached by older versions of the app (it held the old-style timer).
+try {
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith('inmedina-adventure') && !k.startsWith(STORAGE_PREFIX))
+    .forEach((k) => localStorage.removeItem(k))
+} catch {}
 
 // Progress is cached on the phone per user, and saved to Supabase.
 function storageKey(userId) {
@@ -56,9 +68,18 @@ function fromRemote(row) {
     results: row.results || {},
     startedAt: row.started_at ? Date.parse(row.started_at) : null,
     finishedAt: row.finished_at ? Date.parse(row.finished_at) : null,
+    timer: row.timer || legacyTimer(row),
     leaderboard: 'idle',
     savedAt: Date.parse(row.updated_at) || 0,
   }
+}
+
+// Games saved before the timer column existed only have start/finish times.
+function legacyTimer(row) {
+  if (!row.started_at) return null
+  const start = Date.parse(row.started_at)
+  if (row.finished_at) return { activeMs: Date.parse(row.finished_at) - start, runningSince: null, lastSeenAt: null }
+  return { activeMs: 0, runningSince: start, lastSeenAt: Date.parse(row.updated_at) || start }
 }
 
 // Pull this clue's letters out of its answer: { boxNumber: letter }.
@@ -84,9 +105,12 @@ export default function App() {
   const [game, setGame] = useState(EMPTY_GAME)
   const loadedFor = useRef(null) // user id whose game is being / has been loaded
   const [readyFor, setReadyFor] = useState(null) // user id once their game is loaded and routed
+  const [resumed, setResumed] = useState(false) // show the "Welcome back" banner
 
   const user = session?.user || null
-  const { team, clueIndex, results, startedAt, finishedAt } = game
+  const { team, clueIndex, results, startedAt, finishedAt, timer } = game
+  const gameRef = useRef(game)
+  gameRef.current = game
 
   // ── Auth session ──────────────────────────────────────────
   useEffect(() => {
@@ -157,8 +181,13 @@ export default function App() {
       else next = ['how', 'team'].includes(local?.screen) ? local.screen : 'landing'
 
       if (next !== 'finish' && chosen?.finishedAt) chosen = null // finished: start fresh
+      // Reopened mid-hunt: the clock was paused while the app was closed.
+      if (chosen && !chosen.finishedAt && chosen.timer) {
+        chosen = { ...chosen, timer: resumeAfterReopen(chosen.timer) }
+      }
       setGame(chosen || EMPTY_GAME)
       setScreen(next)
+      setResumed(next === 'clue' || next === 'start')
       setReadyFor(userId)
     }
 
@@ -196,19 +225,52 @@ export default function App() {
       points: finishedAt ? finalTotal : clueTotal,
       started_at: startedAt ? new Date(startedAt).toISOString() : null,
       finished_at: finishedAt ? new Date(finishedAt).toISOString() : null,
+      timer,
     })
+    // (Heartbeats are saved separately below, so they don't trigger a full save every 5s.)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team?.id, clueIndex, results, startedAt, finishedAt])
+  }, [team?.id, clueIndex, results, startedAt, finishedAt, timer?.activeMs, timer?.runningSince])
+
+  // ── Timer heartbeat: remember the app is still open ──────
+  // If the browser is closed, the clock pauses at the last heartbeat.
+  useEffect(() => {
+    if (screen !== 'clue' || !team?.id || !isRunning(timer)) return
+    let beats = 0
+    const id = setInterval(() => {
+      setGame((g) => ({ ...g, timer: heartbeat(g.timer), savedAt: Date.now() }))
+      beats += 1
+      if (beats % 6 === 0) updateGame(team.id, { timer: heartbeat(gameRef.current.timer) }) // ~30s
+    }, HEARTBEAT_MS)
+    // Closing / leaving the page: stamp the exact moment into the phone's cache.
+    function onPageHide() {
+      try {
+        const key = storageKey(user.id)
+        const cached = JSON.parse(localStorage.getItem(key))
+        if (cached?.game?.timer) {
+          cached.game.timer = heartbeat(cached.game.timer)
+          cached.game.savedAt = Date.now()
+          localStorage.setItem(key, JSON.stringify(cached))
+        }
+      } catch {}
+    }
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('pagehide', onPageHide)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, team?.id, timer?.runningSince])
 
   // ── Post the finished result to the leaderboard (once) ───
   useEffect(() => {
-    if (screen !== 'finish' || !team?.id || !finishedAt || !startedAt) return
+    if (screen !== 'finish' || !team?.id || !finishedAt || !timer) return
     if (game.leaderboard === 'saved' || game.leaderboard === 'saving') return
     setGame((g) => ({ ...g, leaderboard: 'saving' }))
     // Make sure the finish time is stored before posting the result.
     updateGame(team.id, {
       finished_at: new Date(finishedAt).toISOString(),
       points: finalTotal,
+      timer,
     })
       .then(() =>
         submitToLeaderboard({
@@ -216,7 +278,7 @@ export default function App() {
           playerName: displayName(user),
           teamName: team.name,
           score: finalTotal,
-          timeSeconds: Math.round((finishedAt - startedAt) / 1000),
+          timeSeconds: Math.round(elapsedMs(timer) / 1000), // active play time
         })
       )
       .then(() => setGame((g) => ({ ...g, leaderboard: 'saved' })))
@@ -243,39 +305,62 @@ export default function App() {
   function handleBegin() {
     setAuthNotice('')
     if (!user) setScreen('login')
-    else if (team && !finishedAt) setScreen(screenForGame(game)) // resume
+    else if (team && !finishedAt) {
+      setScreen(screenForGame(game)) // resume
+      setResumed(true)
+    }
     else setScreen('how')
   }
 
   // After How It Works: resume an unfinished hunt, otherwise set up a team.
   function handleHowNext() {
-    setScreen(team && !finishedAt ? screenForGame(game) : 'team')
+    if (team && !finishedAt) {
+      setScreen(screenForGame(game))
+      setResumed(true)
+    } else {
+      setScreen('team')
+    }
+  }
+
+  // "Start a new game instead" (after the player confirmed the warning).
+  async function handleStartNewGame() {
+    await deleteGame(team?.id)
+    setGame(EMPTY_GAME)
+    setResumed(false)
+    setScreen('how')
   }
 
   async function handleTeamReady(name, members) {
     const id = await createGame(name, members) // throws on failure; TeamSetup shows it
     setGame({ ...EMPTY_GAME, team: { id, name, members }, savedAt: Date.now() })
+    setResumed(false)
     setScreen('start')
   }
 
   function handleStartHunt() {
-    // Every new hunt gets a fresh start time, so its timer begins at 00:00.
-    patchGame({ startedAt: Date.now(), finishedAt: null })
+    // Every new hunt gets a brand-new timer, so it always begins at 00:00.
+    setResumed(false)
+    const now = Date.now()
+    patchGame({ startedAt: now, finishedAt: null, timer: newTimer(now) })
     setScreen('clue')
   }
 
   function handleNext() {
     const next = clueIndex + 1
     if (next >= clues.length) {
-      patchGame({ finishedAt: Date.now() })
+      // Stop the clock for good: bank the play time and stop running.
+      const now = Date.now()
+      setGame((g) => ({ ...g, finishedAt: now, timer: pause(g.timer, now), savedAt: now }))
       setScreen('finish')
     } else {
+      setResumed(false) // banner only on the clue they came back to
       patchGame({ clueIndex: next })
     }
   }
 
   function handleRestart() {
     setGame(EMPTY_GAME)
+    setResumed(false)
     setScreen('landing')
   }
 
@@ -285,6 +370,18 @@ export default function App() {
   }
 
   const clue = clues[clueIndex]
+
+  const resumeBanner = resumed && team && !finishedAt ? (
+    <ResumeBanner
+      teamName={team.name}
+      clueNumber={clueIndex + 1}
+      total={clues.length}
+      score={clueTotal}
+      timer={timer}
+      onDismiss={() => setResumed(false)}
+      onStartNew={handleStartNewGame}
+    />
+  ) : null
 
   // Wait for the session, then for a signed-in user's saved game, so we can
   // open on the right screen without flashing another one first.
@@ -334,7 +431,9 @@ export default function App() {
       {screen === 'team' && (
         <TeamSetup onBack={() => setScreen('how')} onReady={handleTeamReady} />
       )}
-      {screen === 'start' && <StartingPoint teamName={team?.name} onStart={handleStartHunt} />}
+      {screen === 'start' && (
+        <StartingPoint teamName={team?.name} notice={resumeBanner} onStart={handleStartHunt} />
+      )}
       {screen === 'clue' && (
         <ClueScreen
           key={clueIndex}
@@ -343,8 +442,8 @@ export default function App() {
           total={clues.length}
           teamName={team?.name}
           score={clueTotal}
-          startedAt={startedAt}
-          finishedAt={finishedAt}
+          timer={timer}
+          notice={resumeBanner}
           result={results[clueIndex] || {}}
           unlockedLetters={(clue.extractLetters || []).map(({ box }) => extractLetters(clue)[box])}
           onHint={() => updateResult({ hintUsed: true })}
@@ -364,7 +463,7 @@ export default function App() {
           letters={letters}
           solved={phraseSolved}
           total={finalTotal}
-          elapsed={startedAt && finishedAt ? finishedAt - startedAt : null}
+          elapsed={timer ? elapsedMs(timer) : null}
           leaderboardStatus={game.leaderboard}
           onRetryLeaderboard={() => patchGame({ leaderboard: 'idle' })}
           onRestart={handleRestart}

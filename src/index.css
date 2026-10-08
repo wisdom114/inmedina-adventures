@@ -1527,3 +1527,87 @@ input[type='text']:disabled {
 .leaderboard-status.is-error {
   color: var(--red);
 }
+
+/* ── Resume banner / start a new game ─────────────── */
+
+.resume-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f8e9c3, var(--gold-pale));
+  color: var(--green-ink);
+  box-shadow: 0 6px 16px -12px rgba(90, 60, 20, 0.6);
+}
+
+.resume-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding-right: 28px;
+}
+
+.resume-progress {
+  font-weight: 700;
+  color: var(--gold-deep);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.resume-sub {
+  font-size: 15px;
+}
+
+.resume-new {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.resume-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  color: var(--gold-deep);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.resume-banner.is-warning {
+  border-color: var(--red);
+  border-left-color: var(--red);
+  background: #fbefec;
+}
+
+.resume-banner.is-warning .resume-title {
+  color: var(--red);
+}
+
+.resume-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(168, 53, 42, 0.08);
+}

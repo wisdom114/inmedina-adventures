@@ -19,6 +19,10 @@ create table if not exists public.games (
   updated_at    timestamptz not null default now()
 );
 
+-- Hunt timer (active play time): { activeMs, runningSince, lastSeenAt }.
+-- Added after the first version of this file — safe to run on an existing table.
+alter table public.games add column if not exists timer jsonb;
+
 create index if not exists games_user_idx on public.games (user_id, created_at desc);
 
 alter table public.games enable row level security;
@@ -35,6 +39,11 @@ drop policy if exists "Players update own games" on public.games;
 create policy "Players update own games"
   on public.games for update to authenticated
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- "Start a new game instead" deletes the player's unfinished game.
+drop policy if exists "Players delete own games" on public.games;
+create policy "Players delete own games"
+  on public.games for delete to authenticated using (auth.uid() = user_id);
 
 -- Keep updated_at current.
 create or replace function public.touch_updated_at() returns trigger
