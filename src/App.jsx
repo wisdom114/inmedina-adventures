@@ -22,6 +22,7 @@ import TeamSetup from './screens/TeamSetup.jsx'
 import StartingPoint from './screens/StartingPoint.jsx'
 import ClueScreen from './screens/ClueScreen.jsx'
 import Finish from './screens/Finish.jsx'
+import Leaderboard from './screens/Leaderboard.jsx'
 
 // v4: timer now stored as active play time; older cached games (and their start times) are dropped.
 const STORAGE_PREFIX = 'inmedina-adventure-v4'
@@ -32,7 +33,7 @@ const SIGNED_IN_SCREENS = ['how', 'team', 'start', 'clue', 'finish']
 const ARRIVED_FROM_EMAIL_LINK = /access_token|type=signup/.test(window.location.hash)
 
 const EMPTY_GAME = {
-  team: null, // { id, name, members } — id is the Supabase games row
+  team: null, // { id, name, members, country } — id is the Supabase games row
   clueIndex: 0,
   results: {},
   startedAt: null, // wall-clock moment Start Hunt was tapped (for records only)
@@ -63,7 +64,7 @@ function loadLocal(userId) {
 
 function fromRemote(row) {
   return {
-    team: { id: row.id, name: row.team_name, members: row.members || [] },
+    team: { id: row.id, name: row.team_name, members: row.members || [], country: row.country || null },
     clueIndex: Math.min(row.current_clue || 0, clues.length - 1),
     results: row.results || {},
     startedAt: row.started_at ? Date.parse(row.started_at) : null,
@@ -106,6 +107,7 @@ export default function App() {
   const loadedFor = useRef(null) // user id whose game is being / has been loaded
   const [readyFor, setReadyFor] = useState(null) // user id once their game is loaded and routed
   const [resumed, setResumed] = useState(false) // show the "Welcome back" banner
+  const [leaderboardBack, setLeaderboardBack] = useState('landing') // screen to return to
 
   const user = session?.user || null
   const { team, clueIndex, results, startedAt, finishedAt, timer } = game
@@ -277,8 +279,10 @@ export default function App() {
           gameId: team.id,
           playerName: displayName(user),
           teamName: team.name,
+          country: team.country,
           score: finalTotal,
           timeSeconds: Math.round(elapsedMs(timer) / 1000), // active play time
+          completedAt: finishedAt,
         })
       )
       .then(() => setGame((g) => ({ ...g, leaderboard: 'saved' })))
@@ -330,9 +334,9 @@ export default function App() {
     setScreen('how')
   }
 
-  async function handleTeamReady(name, members) {
-    const id = await createGame(name, members) // throws on failure; TeamSetup shows it
-    setGame({ ...EMPTY_GAME, team: { id, name, members }, savedAt: Date.now() })
+  async function handleTeamReady(name, members, country) {
+    const id = await createGame(name, members, country) // throws on failure; TeamSetup shows it
+    setGame({ ...EMPTY_GAME, team: { id, name, members, country }, savedAt: Date.now() })
     setResumed(false)
     setScreen('start')
   }
@@ -362,6 +366,11 @@ export default function App() {
     setGame(EMPTY_GAME)
     setResumed(false)
     setScreen('landing')
+  }
+
+  function openLeaderboard() {
+    setLeaderboardBack(screen)
+    setScreen('leaderboard')
   }
 
   async function handleSignOut() {
@@ -400,6 +409,7 @@ export default function App() {
           userName={user ? displayName(user) : null}
           configError={!supabaseConfigured}
           onBegin={handleBegin}
+          onLeaderboard={openLeaderboard}
           onSignOut={handleSignOut}
         />
       )}
@@ -466,7 +476,15 @@ export default function App() {
           elapsed={timer ? elapsedMs(timer) : null}
           leaderboardStatus={game.leaderboard}
           onRetryLeaderboard={() => patchGame({ leaderboard: 'idle' })}
+          onLeaderboard={openLeaderboard}
           onRestart={handleRestart}
+        />
+      )}
+      {screen === 'leaderboard' && (
+        <Leaderboard
+          clueCount={clues.length}
+          currentUserId={user?.id}
+          onBack={() => setScreen(leaderboardBack)}
         />
       )}
     </div>

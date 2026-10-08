@@ -23,6 +23,9 @@ create table if not exists public.games (
 -- Added after the first version of this file — safe to run on an existing table.
 alter table public.games add column if not exists timer jsonb;
 
+-- Team's country (ISO code, e.g. 'SA'), chosen on team setup.
+alter table public.games add column if not exists country text;
+
 create index if not exists games_user_idx on public.games (user_id, created_at desc);
 
 alter table public.games enable row level security;
@@ -89,3 +92,23 @@ create policy "Players post their own finished games"
       where g.id = game_id and g.user_id = auth.uid() and g.finished_at is not null
     )
   );
+
+-- Country (ISO code) and the moment the hunt was completed.
+-- Added after the first version of this file — safe to run on an existing table.
+alter table public.leaderboard add column if not exists country text;
+alter table public.leaderboard add column if not exists completed_at timestamptz not null default now();
+
+drop index if exists leaderboard_rank_idx;
+create index if not exists leaderboard_rank_idx
+  on public.leaderboard (score desc, time_seconds asc, created_at asc);
+
+-- Live updates: let the app hear about new leaderboard rows instantly.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'leaderboard'
+  ) then
+    alter publication supabase_realtime add table public.leaderboard;
+  end if;
+end $$;

@@ -17,6 +17,7 @@ export default function Finish({
   elapsed,
   leaderboardStatus,
   onRetryLeaderboard,
+  onLeaderboard,
   onRestart,
 }) {
   // Split the phrase into words, numbering boxes 1–19 across them.
@@ -152,7 +153,7 @@ export default function Finish({
         </section>
 
         <p className={`leaderboard-status is-${leaderboardStatus}`} aria-live="polite">
-          {leaderboardStatus === 'saved' && '✓ Your score and time are on the leaderboard'}
+          {leaderboardStatus === 'saved' && '✓ Your score has been saved to the leaderboard'}
           {(leaderboardStatus === 'saving' || leaderboardStatus === 'idle') &&
             'Saving to the leaderboard…'}
           {leaderboardStatus === 'error' && (
@@ -174,6 +175,9 @@ export default function Finish({
           <p className="finish-members">{team.members.join(' · ')}</p>
         )}
 
+        <button className="btn btn-gold" onClick={onLeaderboard}>
+          🏆 View Leaderboard
+        </button>
         <button className="btn btn-outline" onClick={onRestart}>
           Start a New Adventure
         </button>

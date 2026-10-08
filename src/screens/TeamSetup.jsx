@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { COUNTRIES } from '../data/countries.js'
 
 const MAX_MEMBERS = 8
 
@@ -7,9 +8,10 @@ export default function TeamSetup({ onBack, onReady }) {
   const [members, setMembers] = useState(['', ''])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [country, setCountry] = useState('')
 
   const filledMembers = members.map((m) => m.trim()).filter(Boolean)
-  const canStart = teamName.trim() && filledMembers.length > 0 && !submitting
+  const canStart = teamName.trim() && filledMembers.length > 0 && country && !submitting
 
   function updateMember(i, value) {
     setMembers((list) => list.map((m, idx) => (idx === i ? value : m)))
@@ -25,7 +27,7 @@ export default function TeamSetup({ onBack, onReady }) {
     setSubmitting(true)
     setError('')
     try {
-      await onReady(teamName.trim(), filledMembers)
+      await onReady(teamName.trim(), filledMembers, country)
     } catch (err) {
       console.error('Could not create game:', err)
       setError('Could not save your team. Check your connection and try again.')
@@ -91,6 +93,22 @@ export default function TeamSetup({ onBack, onReady }) {
             </button>
           )}
         </div>
+
+        <label className="field">
+          <span className="label">Country</span>
+          <div className={`country-select ${country ? 'has-value' : ''}`}>
+            <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+              <option value="" disabled>
+                🌍 Select your country
+              </option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </label>
 
         {error && <p className="feedback feedback-wrong">{error}</p>}
 

@@ -2,7 +2,7 @@ import Star from '../components/Star.jsx'
 import Skyline from '../components/Skyline.jsx'
 import Ornament from '../components/Ornament.jsx'
 
-export default function Landing({ userName, configError, onBegin, onSignOut }) {
+export default function Landing({ userName, configError, onBegin, onLeaderboard, onSignOut }) {
   return (
     <main className="landing">
       <header className="hero">
@@ -31,6 +31,9 @@ export default function Landing({ userName, configError, onBegin, onSignOut }) {
           )}
           <button className="btn btn-gold" onClick={onBegin} disabled={configError}>
             Begin Adventure
+          </button>
+          <button className="btn btn-outline" onClick={onLeaderboard} disabled={configError}>
+            🏆 View Leaderboard
           </button>
           {userName && (
             <p className="landing-account">
