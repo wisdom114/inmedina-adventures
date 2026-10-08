@@ -125,15 +125,19 @@ export default function App() {
         chosen = { ...local.game, leaderboard: lb }
       }
 
-      // …and Supabase, the source of truth. Use Supabase's unfinished game
-      // unless the phone holds a newer copy of that same game.
-      const row = await loadActiveGame()
+      // …and Supabase, the source of truth for which game is current.
+      const { ok, game: row } = await loadActiveGame()
       if (loadedFor.current !== userId) return // signed out meanwhile
       if (row) {
+        // Resume Supabase's game unless the phone holds a newer copy of that same game.
         const remote = fromRemote(row)
         const phoneIsNewer =
           chosen?.team?.id === row.id && (chosen.savedAt || 0) >= remote.savedAt
         if (!phoneIsNewer) chosen = remote
+      } else if (ok && chosen && !chosen.finishedAt) {
+        // Supabase says there's no game to resume, so the phone's unfinished copy
+        // is an old, superseded game — never resume it (or its old start time).
+        chosen = null
       }
 
       const fromEmailLink = ARRIVED_FROM_EMAIL_LINK && !justSignedIn
@@ -255,7 +259,8 @@ export default function App() {
   }
 
   function handleStartHunt() {
-    patchGame({ startedAt: Date.now() })
+    // Every new hunt gets a fresh start time, so its timer begins at 00:00.
+    patchGame({ startedAt: Date.now(), finishedAt: null })
     setScreen('clue')
   }
 
@@ -339,6 +344,7 @@ export default function App() {
           teamName={team?.name}
           score={clueTotal}
           startedAt={startedAt}
+          finishedAt={finishedAt}
           result={results[clueIndex] || {}}
           unlockedLetters={(clue.extractLetters || []).map(({ box }) => extractLetters(clue)[box])}
           onHint={() => updateResult({ hintUsed: true })}

@@ -18,6 +18,7 @@ export default function ClueScreen({
   teamName,
   score,
   startedAt,
+  finishedAt,
   result,
   unlockedLetters = [],
   onHint,
@@ -78,7 +79,7 @@ export default function ClueScreen({
       <header className="clue-top">
         <span className="team-chip">{teamName}</span>
         <div className="clue-top-right">
-          <Timer startedAt={startedAt} />
+          <Timer startedAt={startedAt} finishedAt={finishedAt} />
           <ScoreCounter score={score} />
         </div>
       </header>

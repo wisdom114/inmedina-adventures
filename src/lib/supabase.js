@@ -59,20 +59,21 @@ export async function updateGame(gameId, fields) {
   if (error) console.error('Could not save progress:', error.message)
 }
 
-// The signed-in user's most recent unfinished hunt, if any.
+// Returns { ok, game }. game is the hunt to resume: the signed-in user's LATEST game, only if it isn't finished.
+// Older unfinished games (abandoned before a newer one was started) are never
+// resumed — otherwise an old game and its old start time could come back.
 export async function loadActiveGame() {
   const { data, error } = await requireClient()
     .from('games')
     .select('*')
-    .is('finished_at', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
   if (error) {
     console.error('Could not load saved game:', error.message)
-    return null
+    return { ok: false, game: null } // offline etc. — caller falls back to the phone's copy
   }
-  return data
+  return { ok: true, game: data && !data.finished_at ? data : null }
 }
 
 // ── Leaderboard ─────────────────────────────────────────────
