@@ -9,6 +9,7 @@ import {
   deleteGame,
   loadActiveGame,
   submitToLeaderboard,
+  checkPaymentStatus,
   signOut,
   displayName,
 } from './lib/supabase.js'
@@ -17,6 +18,7 @@ import Star from './components/Star.jsx'
 import ResumeBanner from './components/ResumeBanner.jsx'
 import Landing from './screens/Landing.jsx'
 import AuthScreen from './screens/AuthScreen.jsx'
+import PaymentScreen, { PRICE_LABEL } from './screens/PaymentScreen.jsx'
 import HowItWorks from './screens/HowItWorks.jsx'
 import TeamSetup from './screens/TeamSetup.jsx'
 import StartingPoint from './screens/StartingPoint.jsx'
@@ -31,6 +33,29 @@ const SIGNED_IN_SCREENS = ['how', 'team', 'start', 'clue', 'finish']
 
 // Arriving from the "confirm your email" link: Supabase puts tokens in the URL.
 const ARRIVED_FROM_EMAIL_LINK = /access_token|type=signup/.test(window.location.hash)
+
+// Returning from Stripe Checkout: ?checkout=success&session_id=… or ?checkout=cancelled.
+// The session id is kept until the payment is linked to an account (sign-up may
+// involve confirming an email first, which reloads the app).
+const PENDING_CHECKOUT_KEY = 'inmedina-pending-checkout'
+const CHECKOUT_RESULT = new URLSearchParams(window.location.search).get('checkout')
+if (CHECKOUT_RESULT) {
+  const sessionId = new URLSearchParams(window.location.search).get('session_id')
+  if (CHECKOUT_RESULT === 'success' && sessionId) {
+    try {
+      localStorage.setItem(PENDING_CHECKOUT_KEY, sessionId)
+    } catch {}
+  }
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+}
+
+function pendingCheckout() {
+  try {
+    return localStorage.getItem(PENDING_CHECKOUT_KEY)
+  } catch {
+    return null
+  }
+}
 
 const EMPTY_GAME = {
   team: null, // { id, name, members, country } — id is the Supabase games row
@@ -108,6 +133,14 @@ export default function App() {
   const [readyFor, setReadyFor] = useState(null) // user id once their game is loaded and routed
   const [resumed, setResumed] = useState(false) // show the "Welcome back" banner
   const [leaderboardBack, setLeaderboardBack] = useState('landing') // screen to return to
+  // Payment: null = unknown, true/false once checked for the signed-in player.
+  const [paid, setPaid] = useState(null)
+  const [paymentNotice, setPaymentNotice] = useState(
+    CHECKOUT_RESULT === 'cancelled' ? 'Payment cancelled — you have not been charged.' : ''
+  )
+  const [signupEmail, setSignupEmail] = useState('') // pre-filled from Stripe checkout
+  const [checkingPayment, setCheckingPayment] = useState(CHECKOUT_RESULT === 'success')
+  const paymentCheckedFor = useRef(undefined)
 
   const user = session?.user || null
   const { team, clueIndex, results, startedAt, finishedAt, timer } = game
@@ -196,6 +229,51 @@ export default function App() {
     loadAndRoute()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
+
+  // ── Payment status ────────────────────────────────────────
+  // Runs on load and whenever someone signs in/out: confirms a just-completed
+  // Stripe payment, links payments to the signed-in account, and records
+  // whether this account has paid.
+  useEffect(() => {
+    if (session === undefined || !supabase) return
+    if (user && readyFor !== user.id) return // wait until their game has been loaded and routed
+    const who = user?.id ?? 'signed-out'
+    if (paymentCheckedFor.current === who) return
+    paymentCheckedFor.current = who
+
+    const sessionId = pendingCheckout()
+    if (!user && !sessionId) {
+      setPaid(null)
+      setCheckingPayment(false)
+      return
+    }
+    checkPaymentStatus(sessionId)
+      .then((res) => {
+        if (user) setPaid(Boolean(res.has_paid))
+        // Forget the checkout once it's linked to this account, or if Stripe says it wasn't paid.
+        if (sessionId && ((user && res.has_paid) || !res.paid)) {
+          localStorage.removeItem(PENDING_CHECKOUT_KEY)
+        }
+        if (sessionId && res.paid) {
+          if (!user) {
+            // Paid but no account yet → create one.
+            setSignupEmail(res.email || '')
+            setPaymentNotice('✓ Payment successful! Create your account to start your adventure.')
+            setScreen('signup')
+          } else if (CHECKOUT_RESULT === 'success') {
+            // Already signed in when paying → straight on.
+            setPaymentNotice('')
+            setScreen((s) => (s === 'landing' || s === 'payment' ? 'how' : s))
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Could not check payment:', err)
+        if (user) setPaid(false)
+      })
+      .finally(() => setCheckingPayment(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, readyFor])
 
   // ── Cache on the phone ────────────────────────────────────
   useEffect(() => {
@@ -306,21 +384,29 @@ export default function App() {
     }))
   }
 
+  // "Start Your Adventure": resume a hunt in progress; otherwise paid players
+  // go to How It Works, everyone else to the payment page.
   function handleBegin() {
     setAuthNotice('')
-    if (!user) setScreen('login')
-    else if (team && !finishedAt) {
+    setPaymentNotice('')
+    if (user && team && !finishedAt) {
       setScreen(screenForGame(game)) // resume
       setResumed(true)
+    } else if (user && paid) {
+      setScreen('how')
+    } else {
+      setScreen('payment')
     }
-    else setScreen('how')
   }
 
-  // After How It Works: resume an unfinished hunt, otherwise set up a team.
+  // After How It Works: resume an unfinished hunt; otherwise set up a team
+  // (a new hunt needs a payment on this account).
   function handleHowNext() {
     if (team && !finishedAt) {
       setScreen(screenForGame(game))
       setResumed(true)
+    } else if (!paid) {
+      setScreen('payment')
     } else {
       setScreen('team')
     }
@@ -394,7 +480,7 @@ export default function App() {
 
   // Wait for the session, then for a signed-in user's saved game, so we can
   // open on the right screen without flashing another one first.
-  if (session === undefined || (user && readyFor !== user.id)) {
+  if (session === undefined || (user && readyFor !== user.id) || checkingPayment) {
     return (
       <div className="app app-loading" aria-busy="true">
         <Star size={56} className="loading-star" />
@@ -408,6 +494,14 @@ export default function App() {
         <Landing
           userName={user ? displayName(user) : null}
           configError={!supabaseConfigured}
+          notice={paymentNotice}
+          beginLabel={
+            user && team && !finishedAt
+              ? 'Continue Your Adventure'
+              : user && paid
+                ? 'Start Your Adventure'
+                : `Start Your Adventure - ${PRICE_LABEL}`
+          }
           onBegin={handleBegin}
           onLeaderboard={openLeaderboard}
           onSignOut={handleSignOut}
@@ -417,10 +511,11 @@ export default function App() {
         <AuthScreen
           key={screen}
           mode={screen}
-          notice={authNotice}
+          notice={authNotice || paymentNotice}
+          initialEmail={signupEmail}
           onBack={() => setScreen('landing')}
           onSwitch={() => {
-            setAuthNotice('')
+            setAuthNotice('') // the payment-success message stays
             setScreen(screen === 'login' ? 'signup' : 'login')
           }}
           onSignedUpNeedsConfirm={(email) => {
@@ -429,6 +524,14 @@ export default function App() {
             )
             setScreen('login')
           }}
+        />
+      )}
+      {screen === 'payment' && (
+        <PaymentScreen
+          clueCount={clues.length}
+          userName={user ? displayName(user) : null}
+          onBack={() => setScreen('landing')}
+          onLogin={() => setScreen('login')}
         />
       )}
       {screen === 'how' && (

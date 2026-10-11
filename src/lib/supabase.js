@@ -165,3 +165,24 @@ export function subscribeToLeaderboard(onChange, onLive) {
     .subscribe((status) => onLive?.(status === 'SUBSCRIBED'))
   return () => db.removeChannel(channel)
 }
+
+// ── Payments (Stripe Checkout via Supabase Edge Functions) ──
+
+// Creates a Stripe Checkout page and returns its URL to send the player to.
+export async function startCheckout() {
+  const { data, error } = await requireClient().functions.invoke('create-checkout', {
+    body: { origin: window.location.origin },
+  })
+  if (error || !data?.url) throw error || new Error(data?.error || 'No checkout URL returned')
+  return data.url
+}
+
+// Confirms a Checkout session with Stripe (if given) and, when signed in, links
+// payments to this account. Returns { paid, email, has_paid }.
+export async function checkPaymentStatus(sessionId) {
+  const { data, error } = await requireClient().functions.invoke('payment-status', {
+    body: { session_id: sessionId || null },
+  })
+  if (error) throw error
+  return data
+}

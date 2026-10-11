@@ -23,10 +23,11 @@ export default function AuthScreen({
   onSwitch,
   onBack,
   onSignedUpNeedsConfirm,
+  initialEmail = '',
 }) {
   const isSignup = mode === 'signup'
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)

@@ -1872,3 +1872,118 @@ input[type='text']:disabled {
     animation: none;
   }
 }
+
+/* ── Payment ──────────────────────────────────────── */
+
+.landing-notice {
+  padding: 10px 14px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  background: var(--gold-pale);
+  color: var(--green-ink);
+  font-size: 15px;
+}
+
+.pay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.pay-product {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--green);
+}
+
+.pay-hunt {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--green-ink);
+}
+
+.pay-note {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-deep);
+  margin-bottom: 10px;
+}
+
+.pay-includes {
+  list-style: none;
+  margin: 12px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.pay-includes li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.pay-includes li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+}
+
+.pay-total {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gold);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--gold-deep);
+}
+
+.pay-price {
+  font-family: var(--serif);
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--green);
+  line-height: 1;
+}
+
+.pay-price small {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.pay-small {
+  align-self: flex-end;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pay-btn {
+  min-height: 60px;
+  font-size: 19px;
+}
+
+.pay-secure,
+.pay-account {
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}

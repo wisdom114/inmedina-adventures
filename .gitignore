@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 .env.local
+# Supabase CLI local cache (machine-specific)
+supabase/.temp

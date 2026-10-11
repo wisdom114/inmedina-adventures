@@ -112,3 +112,30 @@ begin
     alter publication supabase_realtime add table public.leaderboard;
   end if;
 end $$;
+
+-- ── Payments: one row per paid Stripe Checkout ──
+-- Written only by the server functions (payment-status, stripe-webhook) using
+-- the service role. Players can read their own payments; nobody can write them
+-- from the app.
+create table if not exists public.payments (
+  id                     uuid primary key default gen_random_uuid(),
+  stripe_session_id      text not null unique,
+  stripe_payment_intent  text,
+  user_id                uuid references auth.users (id) on delete set null,
+  email                  text,
+  amount_total           int  not null,   -- in cents, e.g. 2900 = $29.00
+  currency               text not null,
+  status                 text not null,   -- 'paid'
+  paid_at                timestamptz,
+  claimed_at             timestamptz,     -- when it was linked to an account
+  created_at             timestamptz not null default now()
+);
+
+create index if not exists payments_user_idx on public.payments (user_id);
+create index if not exists payments_email_idx on public.payments (email) where user_id is null;
+
+alter table public.payments enable row level security;
+
+drop policy if exists "Players read own payments" on public.payments;
+create policy "Players read own payments"
+  on public.payments for select to authenticated using (auth.uid() = user_id);

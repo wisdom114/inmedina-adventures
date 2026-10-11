@@ -2,7 +2,15 @@ import Star from '../components/Star.jsx'
 import Skyline from '../components/Skyline.jsx'
 import Ornament from '../components/Ornament.jsx'
 
-export default function Landing({ userName, configError, onBegin, onLeaderboard, onSignOut }) {
+export default function Landing({
+  userName,
+  configError,
+  notice,
+  beginLabel = 'Start Your Adventure',
+  onBegin,
+  onLeaderboard,
+  onSignOut,
+}) {
   return (
     <main className="landing">
       <header className="hero">
@@ -24,13 +32,14 @@ export default function Landing({ userName, configError, onBegin, onLeaderboard,
         </p>
 
         <div className="landing-actions">
+          {notice && <p className="landing-notice">{notice}</p>}
           {configError && (
             <p className="feedback feedback-wrong">
               The app isn’t connected to its database yet (missing Supabase keys).
             </p>
           )}
           <button className="btn btn-gold" onClick={onBegin} disabled={configError}>
-            Begin Adventure
+            {beginLabel}
           </button>
           <button className="btn btn-outline" onClick={onLeaderboard} disabled={configError}>
             🏆 View Leaderboard
