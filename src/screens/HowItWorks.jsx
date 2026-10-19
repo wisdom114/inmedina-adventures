@@ -1,4 +1,5 @@
 import { POINTS, formatPoints, maxScore } from '../data/scoring.js'
+import clues from '../data/clues.js'
 
 const RULES = [
   ['Stay together', 'all team members must visit every location together'],
@@ -15,6 +16,7 @@ export default function HowItWorks({ clueCount, onBack, onNext }) {
     ['Photo challenge completed', POINTS.photoTaken],
     ['Hint revealed', POINTS.hintUsed],
     ['Answer skipped', POINTS.answerSkipped],
+    ...(clues.some((c) => c.bonus) ? [['Bonus challenge completed', POINTS.bonusChallenge]] : []),
     ['Mystery phrase correct', POINTS.mysteryPhrase],
   ]
 

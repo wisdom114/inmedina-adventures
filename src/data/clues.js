@@ -23,6 +23,8 @@ const clues = [
     hint: null,
     photoChallenge: "Team photo at the top of the stairs leading down",
     answerFormat: "MANUSCRIPTS",
+    // Optional bonus, shown after a correct answer. Points come from scoring.js (POINTS.bonusChallenge).
+    bonus: "Step inside the museum, explore, and come back with one thing that amazed you.",
     extractLetters: [{ letter: 11, box: 14 }],
     navigation: "Exit the museum the same way you came in. Take the first elevator — the one that opens toward the Green Dome — and press GF for ground floor."
   },

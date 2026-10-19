@@ -139,3 +139,8 @@ alter table public.payments enable row level security;
 drop policy if exists "Players read own payments" on public.payments;
 create policy "Players read own payments"
   on public.payments for select to authenticated using (auth.uid() = user_id);
+
+-- Bonus challenges raise the maximum possible score above 145.
+-- Allow leaderboard scores up to 200 (safe to run more than once).
+alter table public.leaderboard drop constraint if exists leaderboard_score_check;
+alter table public.leaderboard add constraint leaderboard_score_check check (score between -200 and 200);

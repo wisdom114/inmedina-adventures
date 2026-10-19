@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import LetterBoxes from '../components/LetterBoxes.jsx'
 import PhotoChallenge from '../components/PhotoChallenge.jsx'
+import BonusChallenge from '../components/BonusChallenge.jsx'
 import ScoreCounter from '../components/ScoreCounter.jsx'
 import Timer from '../components/Timer.jsx'
 import Ornament from '../components/Ornament.jsx'
@@ -27,6 +28,7 @@ export default function ClueScreen({
   onSkipAnswer,
   onPhoto,
   onSkipPhoto,
+  onClaimBonus,
   onNext,
 }) {
   const format = clue.answerFormat
@@ -231,6 +233,10 @@ export default function ClueScreen({
           </>
         )}
       </form>
+
+      {result.answer === 'correct' && clue.bonus && (
+        <BonusChallenge text={clue.bonus} result={result} onClaim={onClaimBonus} />
+      )}
 
       {answered && hasPhoto && (
         <div ref={photoRef}>

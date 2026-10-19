@@ -579,6 +579,7 @@ export default function App() {
           onSkipAnswer={() => updateResult({ answer: 'skipped' })}
           onPhoto={(thumb) => updateResult({ photo: 'taken', thumb })}
           onSkipPhoto={() => updateResult({ photo: 'skipped' })}
+          onClaimBonus={(note) => updateResult({ bonusClaimed: true, bonusNote: note })}
           onNext={handleNext}
         />
       )}
