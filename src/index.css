@@ -1981,9 +1981,21 @@ input[type='text']:disabled {
   font-size: 19px;
 }
 
-.pay-secure,
 .pay-account {
   text-align: center;
   font-size: 14px;
   color: var(--muted);
+}
+
+/* Subtle "Already have an account? Log in" under the main button. */
+.landing-login {
+  margin-top: -6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.landing-login .link-btn {
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

@@ -8,6 +8,7 @@ export default function Landing({
   notice,
   beginLabel = 'Start Your Adventure',
   onBegin,
+  onLogin,
   onLeaderboard,
   onSignOut,
 }) {
@@ -41,6 +42,14 @@ export default function Landing({
           <button className="btn btn-gold" onClick={onBegin} disabled={configError}>
             {beginLabel}
           </button>
+          {!userName && (
+            <p className="landing-login">
+              Already have an account?{' '}
+              <button className="link-btn" onClick={onLogin} disabled={configError}>
+                Log in
+              </button>
+            </p>
+          )}
           <button className="btn btn-outline" onClick={onLeaderboard} disabled={configError}>
             🏆 View Leaderboard
           </button>

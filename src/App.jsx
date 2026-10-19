@@ -18,7 +18,7 @@ import Star from './components/Star.jsx'
 import ResumeBanner from './components/ResumeBanner.jsx'
 import Landing from './screens/Landing.jsx'
 import AuthScreen from './screens/AuthScreen.jsx'
-import PaymentScreen, { PRICE_LABEL } from './screens/PaymentScreen.jsx'
+import PaymentScreen from './screens/PaymentScreen.jsx'
 import HowItWorks from './screens/HowItWorks.jsx'
 import TeamSetup from './screens/TeamSetup.jsx'
 import StartingPoint from './screens/StartingPoint.jsx'
@@ -495,14 +495,12 @@ export default function App() {
           userName={user ? displayName(user) : null}
           configError={!supabaseConfigured}
           notice={paymentNotice}
-          beginLabel={
-            user && team && !finishedAt
-              ? 'Continue Your Adventure'
-              : user && paid
-                ? 'Start Your Adventure'
-                : `Start Your Adventure - ${PRICE_LABEL}`
-          }
+          beginLabel={user && team && !finishedAt ? 'Continue Your Adventure' : 'Start Your Adventure'}
           onBegin={handleBegin}
+          onLogin={() => {
+            setPaymentNotice('')
+            setScreen('login')
+          }}
           onLeaderboard={openLeaderboard}
           onSignOut={handleSignOut}
         />

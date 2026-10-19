@@ -58,9 +58,8 @@ export default function PaymentScreen({ clueCount, userName, onBack, onLogin }) 
       {error && <p className="feedback feedback-wrong">{error}</p>}
 
       <button className="btn btn-gold pay-btn" onClick={handlePay} disabled={busy}>
-        {busy ? 'Opening secure payment…' : `Pay ${PRICE_LABEL} with Stripe`}
+        {busy ? 'Opening checkout…' : 'Unlock Your Adventure'}
       </button>
-      <p className="pay-secure">🔒 Secure payment by Stripe. We never see your card details.</p>
 
       {userName ? (
         <p className="pay-account">
