@@ -4,6 +4,7 @@ import PhotoChallenge from '../components/PhotoChallenge.jsx'
 import ScoreCounter from '../components/ScoreCounter.jsx'
 import Timer from '../components/Timer.jsx'
 import Ornament from '../components/Ornament.jsx'
+import { playCorrect, playWrong } from '../lib/feedback.js'
 import { POINTS, formatPoints } from '../data/scoring.js'
 
 // Lowercase and strip spaces/punctuation so "Abu Hurairah" == "abu-hurairah".
@@ -33,6 +34,8 @@ export default function ClueScreen({
   const [letters, setLetters] = useState(() => Array(answerLetters.length).fill(''))
   const [answer, setAnswer] = useState('') // used only when a clue has no answerFormat
   const [wrong, setWrong] = useState(false)
+  const [wrongCount, setWrongCount] = useState(0) // wrong submissions (each re-runs the shake)
+  const [celebrate, setCelebrate] = useState(false) // just answered correctly, this visit
   const [confirmSkip, setConfirmSkip] = useState(false)
 
   const isLast = number === total
@@ -71,7 +74,14 @@ export default function ClueScreen({
     const ok =
       accepted.length === 0 || accepted.some((a) => normalize(a) === normalize(typed))
     setWrong(!ok)
-    if (ok) onCorrect()
+    if (ok) {
+      playCorrect()
+      setCelebrate(true)
+      onCorrect()
+    } else {
+      playWrong()
+      setWrongCount((n) => n + 1)
+    }
   }
 
   return (
@@ -124,6 +134,10 @@ export default function ClueScreen({
           <div className="field">
             <span className="label">{clue.question || 'Your answer'}</span>
             <LetterBoxes
+              // Changes only when a wrong answer is submitted: restarts the shake,
+              // never interrupts typing.
+              key={`boxes-${wrongCount}`}
+              celebrate={celebrate}
               format={format}
               values={boxValues}
               goldBoxes={goldBoxes}

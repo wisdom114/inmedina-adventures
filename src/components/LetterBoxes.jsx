@@ -16,7 +16,7 @@ export function parseFormat(format) {
     )
 }
 
-export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, status }) {
+export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, status, celebrate = false }) {
   const refs = useRef([])
   const words = parseFormat(format)
   const count = values.length
@@ -88,7 +88,7 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
 
   return (
     <div
-      className={`letter-boxes is-${status}`}
+      className={`letter-boxes is-${status} ${celebrate ? 'is-celebrating' : ''}`}
       style={{ '--cells': longestWord }}
       role="group"
       aria-label="Answer letters"
@@ -104,6 +104,7 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
               <span
                 className={`lb-cell ${goldBoxes[cell.index + 1] ? 'is-gold' : ''}`}
                 key={c}
+                style={{ '--i': cell.index }}
               >
                 {goldBoxes[cell.index + 1] && (
                   <small className="lb-num">{goldBoxes[cell.index + 1]}</small>

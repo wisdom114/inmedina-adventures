@@ -2003,3 +2003,43 @@ input[type='text']:disabled {
   color: var(--gold-deep);
   -webkit-text-fill-color: var(--gold-deep);
 }
+
+/* ── Answer feedback animations ───────────────────── */
+
+/* Correct: each box pops with a soft green-and-gold glow, rippling left to right. */
+.letter-boxes.is-celebrating .lb-input {
+  animation: correct-pulse 0.7s ease calc(var(--i, 0) * 45ms) 1 normal none;
+}
+
+@keyframes correct-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.14);
+    box-shadow: 0 0 0 5px rgba(46, 160, 90, 0.35), 0 0 18px rgba(212, 166, 70, 0.75);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Wrong: a quick red shake with a flash of red. */
+.letter-boxes.is-wrong .lb-input {
+  animation: wrong-shake 0.42s ease;
+}
+
+@keyframes wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); background: #f9e1dc; }
+  35% { transform: translateX(6px); }
+  55% { transform: translateX(-4px); }
+  75% { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-boxes.is-celebrating .lb-input,
+  .letter-boxes.is-wrong .lb-input {
+    animation: none;
+  }
+}
