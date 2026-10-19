@@ -2,7 +2,7 @@ const clues = [
   {
     id: 1,
     title: "THE CEMETERY SIGN",
-    story: "The cemetery of Medina is known to most visitors simply as Al-Baqi. But its full name has been largely forgotten. Hidden in that name is a connection to something that once grew here - something mentioned in hadith, with a significance most people never learn.",
+    story: "The cemetery of Medina is known to most visitors simply as Al-Baqi. But its full name tells a deeper story. A thorny tree once grew abundantly throughout this land. The Companions of the Prophet ﷺ cleared these trees to make way for burials and to allow visitors to move freely through the cemetery. Over time, the trees disappeared — and with them, the memory of the name. Today, most visitors walk past this sign without ever knowing what it means.",
     task: "Find the sign that points toward the cemetery. The sign reveals the full name.",
     question: "Write the second word of the full name exactly as it appears.",
     acceptedAnswers: ["al-gharqad", "algharqad", "gharqad"],
@@ -16,19 +16,20 @@ const clues = [
     id: 2,
     title: "THE HIDDEN MUSEUM",
     story: "Most visitors walk past this entrance every single day without noticing it exists. Hidden beneath the Masjid lies a treasure of rare Islamic manuscripts - one of the most significant collections in the world. Very few visitors ever find their way down.",
-    task: "Find the sign at the museum entrance.",
-    question: "Write the second word on the sign.",
+    // Sign reads: "The Exhibition of the Rare Manuscripts of the Prophet's Mosque" — 6th word = MANUSCRIPTS
+    task: "Find the sign at the museum entrance. Write the sixth word on the sign in English.",
+    question: "Write the sixth word on the sign.",
     acceptedAnswers: ["manuscripts", "manuscript"],
     hint: null,
     photoChallenge: "Team photo at the top of the stairs leading down",
     answerFormat: "MANUSCRIPTS",
     extractLetters: [{ letter: 11, box: 14 }],
-    navigation: "Exit the museum and walk straight. Take the first elevator to GF. Turn right and walk until you are standing opposite Gate 367. Look at the mosque wall."
+    navigation: "Exit the museum the same way you came in. Take the first elevator — the one that opens toward the Green Dome — and press GF for ground floor."
   },
   {
     id: 3,
     title: "THE DOOR WITH TWO NAMES",
-    story: "Most doors in the Masjid carry one name. This door carries two. One name honours the angel who brought revelation to the Prophet, peace be upon him. The other honours the Companion who stood faithfully by his side through every hardship and gave generously from his wealth for Islam. Directly in front of the number 39, you will notice a door with a gold and green ledge - that is the famous Door of Jibril, Door 40.",
+    story: "Most doors in the Masjid carry one name. This door carries two. It is called the Door of Jibril because it was here that the Prophet ﷺ would meet the angel Jibril, who brought him revelation from Allah. It is also called the Door of Uthman, after the Companion Uthman ibn Affan — whose home stood directly across from this very door. Two names. Two stories. One door. Directly in front of the number 39, you will notice a door with a gold and green ledge — that is Door 40, the famous Door of Jibril.",
     task: "Find the number 39 in Arabic on the mosque wall.",
     question: "Write the door number as a word. Example: if it were door 5, write FIVE.",
     acceptedAnswers: ["thirty nine", "thirty-nine", "thirtynine"],

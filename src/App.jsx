@@ -290,10 +290,10 @@ export default function App() {
     window.scrollTo(0, 0)
   }, [screen, clueIndex])
 
-  // Letters only come from clues answered correctly; skipped clues leave gaps.
+  // Every answered clue adds its gold letters — skipped clues too, since the answer is revealed.
   const letters = Object.assign(
     {},
-    ...clues.map((clue, i) => (results[i]?.answer === 'correct' ? extractLetters(clue) : {}))
+    ...clues.map((clue, i) => (results[i]?.answer ? extractLetters(clue) : {}))
   )
   const phraseSolved = [...PHRASE_LETTERS].every((ch, i) => letters[i + 1] === ch)
   const clueTotal = clues.reduce((sum, _, i) => sum + clueScore(results[i]), 0)

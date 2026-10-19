@@ -165,14 +165,16 @@ export default function ClueScreen({
         )}
         {result.answer === 'skipped' && (
           <p className="feedback feedback-skipped">
-            Answer skipped — here’s what it was.{' '}
+            Answer skipped — here’s the answer. Its gold letters have been added to your mystery phrase.{' '}
             <span className="points-tag is-down">{formatPoints(POINTS.answerSkipped)}</span>
           </p>
         )}
 
-        {result.answer === 'correct' && unlockedLetters.length > 0 && (
+        {result.answer && unlockedLetters.length > 0 && (
           <div className="unlocked">
-            <p className="section-label section-label-gold">Mystery letters unlocked</p>
+            <p className="section-label section-label-gold">
+              {result.answer === 'skipped' ? 'Mystery letters added' : 'Mystery letters unlocked'}
+            </p>
             <div className="unlocked-letters">
               {unlockedLetters.map((ch, i) => (
                 <span className="letter-tile" key={i}>
@@ -191,8 +193,8 @@ export default function ClueScreen({
             {confirmSkip ? (
               <div className="skip-confirm">
                 <p>
-                  Skip this answer? You’ll lose {Math.abs(POINTS.answerSkipped)} points and its
-                  mystery letters.
+                  Skip this answer? You’ll lose {Math.abs(POINTS.answerSkipped)} points. The answer will
+                  be revealed and its gold letters still added to your mystery phrase.
                 </p>
                 <div className="skip-confirm-actions">
                   <button type="button" className="link-btn" onClick={() => setConfirmSkip(false)}>

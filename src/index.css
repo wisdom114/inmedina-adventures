@@ -1995,3 +1995,11 @@ input[type='text']:disabled {
 .start-timer {
   margin-top: 6px;
 }
+
+/* Skipped answer: revealed in grey, but its gold letters still count toward the phrase. */
+.letter-boxes.is-skipped .lb-cell.is-gold .lb-input {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #fbefcf, #f2dca6);
+  color: var(--gold-deep);
+  -webkit-text-fill-color: var(--gold-deep);
+}
