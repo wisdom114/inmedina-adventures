@@ -3,7 +3,6 @@ import { POINTS, formatPoints, maxScore } from '../data/scoring.js'
 const RULES = [
   ['Stay together', 'all team members must visit every location together'],
   ['Read the story first', 'before looking for the answer'],
-  ['Gold boxes matter', 'do not skip them, they build the mystery phrase'],
   ['Take your photo', 'before leaving each location'],
   ['Be respectful', 'you are in and around Masjid al-Nabawi, move calmly and with adab'],
   ['No cheating', 'all answers are physically at the locations, do not search online'],
@@ -84,10 +83,6 @@ export default function HowItWorks({ clueCount, onBack, onNext }) {
             <span>{maxScore(clueCount)} points</span>
           </li>
         </ul>
-        <p className="how-tiebreak">
-          <strong>Tiebreaker:</strong> if two teams tie on score, the team with the faster time
-          wins.
-        </p>
       </section>
 
       <button className="btn btn-green" onClick={onNext}>
