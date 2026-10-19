@@ -84,8 +84,8 @@ export default function Finish({
             <p className="phrase-meaning-text">
               This city is not just a place of history — it is where faith itself finds its home.
               To complete this hunt, to walk these paths, to seek out what has been forgotten —
-              that is its own act of love. And love of Medina, as the Prophet ﷺ taught us, is part
-              of faith itself.
+              that is its own act of love. And the Prophet ﷺ himself prayed: ‘O Allah, make
+              Medina as beloved to us as You made Makkah beloved, or even more.’ (Bukhari)
             </p>
             <Ornament />
           </section>
