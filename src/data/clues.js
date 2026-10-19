@@ -78,6 +78,15 @@ const clues = [
     id: 7,
     title: "THE INVISIBLE WALL",
     story: "Medina was once a fortified city protected by two layers of walls - an outer wall and an inner wall. The inner wall ran through this exact spot. Today it has been absorbed into the Masjid itself, invisible to almost everyone who passes. You are standing where the ancient city wall once stood.",
+    // Optional picture shown under the story.
+    image: {
+      // Saved in public/images (copied from sacredfootsteps.com) so it's hosted with the app.
+      src: "/images/clue7-walls-of-medina.jpg",
+      alt: "Old photograph of Medina with its city walls, late 19th century",
+      width: 852, // actual size — reserves space so the page doesn't jump while it loads
+      height: 551,
+      caption: "Medina, late 19th century — the city walls still standing. (Source: sacredfootsteps.com)",
+    },
     task: "Find the washroom structure and look at the sign.",
     question: "Write exactly what the sign says for this facility.",
     acceptedAnswers: ["men's toilets", "mens toilets", "men toilets"],

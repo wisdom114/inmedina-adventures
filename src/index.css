@@ -2259,3 +2259,30 @@ input[type='text']:disabled {
   font-weight: 700;
   color: var(--gold-deep);
 }
+
+/* ── Picture inside a story card ──────────────────── */
+
+.story-figure {
+  margin: 18px 0 0;
+  clear: both; /* sit below the story's large first letter */
+}
+
+.story-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  box-shadow: 0 6px 14px -8px rgba(90, 60, 20, 0.6);
+  background: #efe6d2; /* placeholder tone while loading */
+}
+
+.story-figure figcaption {
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--gold-deep);
+}

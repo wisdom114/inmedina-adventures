@@ -8,6 +8,24 @@ import Ornament from '../components/Ornament.jsx'
 import { playCorrect, playWrong } from '../lib/feedback.js'
 import { MAX_REVEALS_PER_CLUE, POINTS, formatPoints } from '../data/scoring.js'
 
+// Picture under a clue's story. If it can't load (e.g. no signal), it's left out.
+function StoryImage({ image }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return (
+    <figure className="story-figure">
+      <img
+        src={image.src}
+        alt={image.alt || ''}
+        width={image.width}
+        height={image.height}
+        onError={() => setFailed(true)}
+      />
+      {image.caption && <figcaption>{image.caption}</figcaption>}
+    </figure>
+  )
+}
+
 // Lowercase and strip spaces/punctuation so "Abu Hurairah" == "abu-hurairah".
 function normalize(text) {
   return text.toLowerCase().replace(/[^a-z0-9؀-ۿ]/g, '')
@@ -135,6 +153,7 @@ export default function ClueScreen({
       <section className="card card-manuscript">
         <p className="section-label">The Story</p>
         <p className="story">{clue.story}</p>
+        {clue.image && <StoryImage image={clue.image} />}
       </section>
 
       <Ornament />
