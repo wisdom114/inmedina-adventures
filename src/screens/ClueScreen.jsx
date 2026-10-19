@@ -63,6 +63,7 @@ export default function ClueScreen({
   const [wrongCount, setWrongCount] = useState(0) // wrong submissions (each re-runs the shake)
   const [celebrate, setCelebrate] = useState(false) // just answered correctly, this visit
   const [confirmSkip, setConfirmSkip] = useState(false)
+  const [showBlocked, setShowBlocked] = useState(false) // "Location blocked?" message
 
   const isLast = number === total
   const answered = Boolean(result.answer) // 'correct' or 'skipped'
@@ -284,6 +285,28 @@ export default function ClueScreen({
                 onClick={() => setConfirmSkip(true)}
               >
                 Skip this answer ({formatPoints(POINTS.answerSkipped)} points)
+              </button>
+            )}
+
+            {showBlocked ? (
+              <div className="blocked-note" role="status">
+                <p>
+                  If this location is currently inaccessible, you can wait for it to reopen —
+                  closing the app will pause your timer. When you return, you will pick up right
+                  where you left off. If you need to move on, you can skip this clue, but skipping
+                  costs {Math.abs(POINTS.answerSkipped)} points and reveals the answer.
+                </p>
+                <button type="button" className="btn btn-green blocked-ok" onClick={() => setShowBlocked(false)}>
+                  Got it
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="link-btn skip-link blocked-link"
+                onClick={() => setShowBlocked(true)}
+              >
+                Location blocked?
               </button>
             )}
           </>

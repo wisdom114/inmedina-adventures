@@ -2286,3 +2286,36 @@ input[type='text']:disabled {
   text-align: center;
   color: var(--gold-deep);
 }
+
+/* ── "Location blocked?" ──────────────────────────── */
+
+.blocked-link {
+  margin-top: -10px; /* sits close under the skip link */
+}
+
+.blocked-note {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--gold);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--gold-pale);
+  color: var(--green-ink);
+  font-size: 15px;
+  line-height: 1.6;
+  animation: slide-in 0.3s ease both;
+}
+
+.blocked-ok {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blocked-note {
+    animation: none;
+  }
+}
