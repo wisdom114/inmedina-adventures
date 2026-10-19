@@ -74,6 +74,23 @@ export default function Finish({
           </div>
         </section>
 
+        {solved && (
+          <section className="phrase-meaning" aria-label="The meaning of the phrase">
+            <Ornament />
+            <p className="phrase-meaning-quote">
+              The Prophet ﷺ said: ‘Verily, faith returns and retreats to Medina just as a snake
+              retreats to its hole.’
+            </p>
+            <p className="phrase-meaning-text">
+              This city is not just a place of history — it is where faith itself finds its home.
+              To complete this hunt, to walk these paths, to seek out what has been forgotten —
+              that is its own act of love. And love of Medina, as the Prophet ﷺ taught us, is part
+              of faith itself.
+            </p>
+            <Ornament />
+          </section>
+        )}
+
         {solved ? (
           <div className="celebration">
             <p className="celebration-title">Phrase unlocked!</p>

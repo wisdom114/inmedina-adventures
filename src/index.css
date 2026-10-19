@@ -2139,3 +2139,40 @@ input[type='text']:disabled {
   font-style: italic;
   color: var(--gold-deep);
 }
+
+/* Meaning of the mystery phrase, under the revealed phrase on the finish screen. */
+.phrase-meaning {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 20px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 249, 232, 0.9), transparent 75%),
+    var(--parchment);
+  box-shadow: inset 0 0 0 4px var(--parchment), inset 0 0 0 5px rgba(184, 134, 42, 0.45),
+    var(--manuscript-shadow);
+  animation: pop-in 0.5s ease 1.3s both; /* appears once the phrase boxes have revealed */
+}
+
+.phrase-meaning-quote {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--gold-deep);
+}
+
+.phrase-meaning-text {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--green-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phrase-meaning {
+    animation: none;
+  }
+}
