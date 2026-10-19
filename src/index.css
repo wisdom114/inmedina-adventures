@@ -1990,3 +1990,8 @@ input[type='text']:disabled {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Timer shown in the Starting Point header once Start Hunt is tapped. */
+.start-timer {
+  margin-top: 6px;
+}

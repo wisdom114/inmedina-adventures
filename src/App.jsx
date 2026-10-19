@@ -64,6 +64,7 @@ const EMPTY_GAME = {
   startedAt: null, // wall-clock moment Start Hunt was tapped (for records only)
   finishedAt: null,
   timer: null, // active play time — see lib/timer.js. null until Start Hunt.
+  headingToClue1: false, // Start Hunt tapped, still walking to the first clue
   leaderboard: 'idle', // idle | saving | saved | error
 }
 
@@ -121,7 +122,8 @@ function extractLetters(clue) {
 function screenForGame(game) {
   if (!game.team) return 'team'
   if (game.finishedAt) return 'finish'
-  return game.startedAt ? 'clue' : 'start'
+  if (!game.startedAt) return 'start'
+  return game.headingToClue1 ? 'start' : 'clue' // still on the way to Clue 1?
 }
 
 export default function App() {
@@ -209,7 +211,8 @@ export default function App() {
       //  • just logged in / confirmed email → How It Works
       //  • otherwise → landing (or the pre-game screen they were on)
       let next
-      if (chosen?.team && !chosen.finishedAt && chosen.startedAt) next = 'clue'
+      if (chosen?.team && !chosen.finishedAt && chosen.startedAt)
+        next = chosen.headingToClue1 ? 'start' : 'clue'
       else if (chosen?.team && !chosen.finishedAt) next = 'start'
       else if (chosen?.finishedAt && local?.screen === 'finish') next = 'finish'
       else if (justSignedIn || fromEmailLink) next = 'how'
@@ -314,7 +317,8 @@ export default function App() {
   // ── Timer heartbeat: remember the app is still open ──────
   // If the browser is closed, the clock pauses at the last heartbeat.
   useEffect(() => {
-    if (screen !== 'clue' || !team?.id || !isRunning(timer)) return
+    // Runs on the clue screens and on the Starting Point once the hunt has started.
+    if ((screen !== 'clue' && screen !== 'start') || !team?.id || !isRunning(timer)) return
     let beats = 0
     const id = setInterval(() => {
       setGame((g) => ({ ...g, timer: heartbeat(g.timer), savedAt: Date.now() }))
@@ -431,7 +435,14 @@ export default function App() {
     // Every new hunt gets a brand-new timer, so it always begins at 00:00.
     setResumed(false)
     const now = Date.now()
-    patchGame({ startedAt: now, finishedAt: null, timer: newTimer(now) })
+    patchGame({ startedAt: now, finishedAt: null, timer: newTimer(now), headingToClue1: true })
+    // Stay on the Starting Point: it now shows the directions to Clue 1.
+  }
+
+  // "I'm at the location — let's go" on the Starting Point.
+  function handleArrivedAtClue1() {
+    setResumed(false)
+    patchGame({ headingToClue1: false })
     setScreen('clue')
   }
 
@@ -543,7 +554,13 @@ export default function App() {
         <TeamSetup onBack={() => setScreen('how')} onReady={handleTeamReady} />
       )}
       {screen === 'start' && (
-        <StartingPoint teamName={team?.name} notice={resumeBanner} onStart={handleStartHunt} />
+        <StartingPoint
+          teamName={team?.name}
+          notice={resumeBanner}
+          timer={timer}
+          onStart={handleStartHunt}
+          onContinue={handleArrivedAtClue1}
+        />
       )}
       {screen === 'clue' && (
         <ClueScreen
