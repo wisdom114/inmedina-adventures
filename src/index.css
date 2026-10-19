@@ -2043,3 +2043,13 @@ input[type='text']:disabled {
     animation: none;
   }
 }
+
+/* Shown on team setup once 8 members have been added. */
+.team-max-note {
+  padding: 10px 12px;
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  background: var(--gold-pale);
+  color: var(--green-ink);
+  font-size: 14px;
+}

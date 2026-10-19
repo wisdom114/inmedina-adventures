@@ -83,7 +83,7 @@ export default function TeamSetup({ onBack, onReady }) {
               )}
             </div>
           ))}
-          {members.length < MAX_MEMBERS && (
+          {members.length < MAX_MEMBERS ? (
             <button
               type="button"
               className="link-btn add-member"
@@ -91,6 +91,11 @@ export default function TeamSetup({ onBack, onReady }) {
             >
               + Add member
             </button>
+          ) : (
+            <p className="team-max-note">
+              Maximum team size is {MAX_MEMBERS} players. For larger groups, purchase an additional
+              adventure so everyone can play together.
+            </p>
           )}
         </div>
 
