@@ -16,7 +16,7 @@ Built with React (Vite) and Supabase.
 ## Edit the clues
 
 All 8 clues live in **`src/data/clues.js`**. Each clue has a `title`, `story`, `task`,
-`question`, `answerFormat`, `acceptedAnswers`, optional `hint`, `photoChallenge`, `extractLetters`, and
+`question`, `answerFormat`, `acceptedAnswers`, `photoChallenge`, optional `bonus`, `extractLetters`, and
 `navigation` (directions shown after a correct answer). Save the file and the app updates.
 
 ## Supabase (accounts, progress, leaderboard)

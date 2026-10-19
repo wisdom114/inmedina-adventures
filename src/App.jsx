@@ -380,12 +380,17 @@ export default function App() {
     setGame((g) => ({ ...g, ...patch, savedAt: Date.now() }))
   }
 
+  // patch: an object, or a function of the current result (for changes that build on it).
   function updateResult(patch) {
-    setGame((g) => ({
-      ...g,
-      savedAt: Date.now(),
-      results: { ...g.results, [g.clueIndex]: { ...g.results[g.clueIndex], ...patch } },
-    }))
+    setGame((g) => {
+      const current = g.results[g.clueIndex] || {}
+      const changes = typeof patch === 'function' ? patch(current) : patch
+      return {
+        ...g,
+        savedAt: Date.now(),
+        results: { ...g.results, [g.clueIndex]: { ...current, ...changes } },
+      }
+    })
   }
 
   // "Start Your Adventure": resume a hunt in progress; otherwise paid players
@@ -574,7 +579,9 @@ export default function App() {
           notice={resumeBanner}
           result={results[clueIndex] || {}}
           unlockedLetters={(clue.extractLetters || []).map(({ box }) => extractLetters(clue)[box])}
-          onHint={() => updateResult({ hintUsed: true })}
+          onRevealLetter={(i) =>
+            updateResult((r) => ({ revealedIdx: [...new Set([...(r.revealedIdx || []), i])] }))
+          }
           onCorrect={() => updateResult({ answer: 'correct' })}
           onSkipAnswer={() => updateResult({ answer: 'skipped' })}
           onPhoto={(thumb) => updateResult({ photo: 'taken', thumb })}

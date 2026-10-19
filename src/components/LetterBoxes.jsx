@@ -16,7 +16,18 @@ export function parseFormat(format) {
     )
 }
 
-export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, status, celebrate = false }) {
+// revealed: letter indexes filled in by "Reveal a letter" — locked, and
+// skipped over when typing, deleting or moving between boxes.
+export default function LetterBoxes({
+  format,
+  values,
+  onChange,
+  goldBoxes = {},
+  status,
+  celebrate = false,
+  revealed = [],
+  justRevealed = null,
+}) {
   const refs = useRef([])
   const words = parseFormat(format)
   const count = values.length
@@ -25,27 +36,37 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
     ...words.map((w) => w.reduce((n, cell) => n + (cell.type === 'fixed' ? 0.5 : 1), 0))
   )
   const locked = status === 'correct' || status === 'skipped'
+  const isRevealed = (i) => revealed.includes(i)
 
-  function focusBox(i) {
-    const el = refs.current[Math.max(0, Math.min(count - 1, i))]
+  // Nearest box the player can type in, starting at i and moving in dir (+1 / -1).
+  function editableFrom(i, dir) {
+    for (let k = i; k >= 0 && k < count; k += dir) if (!isRevealed(k)) return k
+    return -1
+  }
+
+  function focusBox(i, dir = 1) {
+    const target = editableFrom(Math.max(0, Math.min(count - 1, i)), dir)
+    const el = refs.current[target]
     if (el) {
       el.focus()
       el.select()
     }
   }
 
-  function setLetter(i, ch) {
-    const next = [...values]
-    next[i] = ch
-    onChange(next)
-  }
-
-  // Write letters into the boxes starting at i, then move focus past them.
+  // Write letters into the editable boxes starting at i, then move focus past them.
   function fillFrom(i, letters) {
     const next = [...values]
-    for (let k = 0; k < letters.length && i + k < count; k++) next[i + k] = letters[k]
+    let pos = i
+    for (const ch of letters) {
+      pos = editableFrom(pos, 1)
+      if (pos === -1) break
+      next[pos] = ch
+      pos += 1
+    }
     onChange(next)
-    focusBox(Math.min(i + letters.length, count - 1))
+    // Move on to the next box you can type in; at the end, stay on the last one.
+    if (pos !== -1 && pos < count && editableFrom(pos, 1) !== -1) focusBox(pos, 1)
+    else focusBox(count - 1, -1)
   }
 
   function handleInput(i, e) {
@@ -64,19 +85,24 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
     if (e.key === 'Backspace') {
       e.preventDefault()
       if (values[i]) {
-        setLetter(i, '')
-      } else if (i > 0) {
         const next = [...values]
-        next[i - 1] = ''
+        next[i] = ''
         onChange(next)
-        focusBox(i - 1)
+      } else {
+        const prev = editableFrom(i - 1, -1)
+        if (prev !== -1) {
+          const next = [...values]
+          next[prev] = ''
+          onChange(next)
+          focusBox(prev, -1)
+        }
       }
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault()
-      focusBox(i - 1)
+      focusBox(i - 1, -1)
     } else if (e.key === 'ArrowRight') {
       e.preventDefault()
-      focusBox(i + 1)
+      focusBox(i + 1, 1)
     }
   }
 
@@ -102,7 +128,12 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
               </span>
             ) : (
               <span
-                className={`lb-cell ${goldBoxes[cell.index + 1] ? 'is-gold' : ''}`}
+                className={[
+                  'lb-cell',
+                  goldBoxes[cell.index + 1] ? 'is-gold' : '',
+                  isRevealed(cell.index) ? 'is-revealed' : '',
+                  justRevealed === cell.index ? 'is-just-revealed' : '',
+                ].join(' ')}
                 key={c}
                 style={{ '--i': cell.index }}
               >
@@ -119,8 +150,8 @@ export default function LetterBoxes({ format, values, onChange, goldBoxes = {}, 
                   autoCapitalize="characters"
                   spellCheck={false}
                   value={values[cell.index]}
-                  disabled={locked}
-                  aria-label={`Letter ${cell.index + 1}`}
+                  disabled={locked || isRevealed(cell.index)}
+                  aria-label={`Letter ${cell.index + 1}${isRevealed(cell.index) ? ' (revealed)' : ''}`}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => handleInput(cell.index, e)}
                   onKeyDown={(e) => handleKeyDown(cell.index, e)}

@@ -1,4 +1,4 @@
-import { POINTS, formatPoints, maxScore } from '../data/scoring.js'
+import { MAX_REVEALS_PER_CLUE, POINTS, formatPoints, maxScore } from '../data/scoring.js'
 import clues from '../data/clues.js'
 
 const RULES = [
@@ -7,14 +7,14 @@ const RULES = [
   ['Take your photo', 'before leaving each location'],
   ['Be respectful', 'you are in and around Masjid al-Nabawi, move calmly and with adab'],
   ['No cheating', 'all answers are physically at the locations, do not search online'],
-  ['If you get stuck', 'you can use a hint or skip but points will be deducted'],
+  ['If you get stuck', 'you can reveal a letter or skip, but points will be deducted'],
 ]
 
 export default function HowItWorks({ clueCount, onBack, onNext }) {
   const scoring = [
     ['Correct answer', POINTS.correctAnswer],
     ['Photo challenge completed', POINTS.photoTaken],
-    ['Hint revealed', POINTS.hintUsed],
+    [`Letter revealed (up to ${MAX_REVEALS_PER_CLUE} per clue)`, POINTS.letterRevealed],
     ['Answer skipped', POINTS.answerSkipped],
     ...(clues.some((c) => c.bonus) ? [['Bonus challenge completed', POINTS.bonusChallenge]] : []),
     ['Mystery phrase correct', POINTS.mysteryPhrase],

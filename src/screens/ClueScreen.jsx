@@ -6,7 +6,7 @@ import ScoreCounter from '../components/ScoreCounter.jsx'
 import Timer from '../components/Timer.jsx'
 import Ornament from '../components/Ornament.jsx'
 import { playCorrect, playWrong } from '../lib/feedback.js'
-import { POINTS, formatPoints } from '../data/scoring.js'
+import { MAX_REVEALS_PER_CLUE, POINTS, formatPoints } from '../data/scoring.js'
 
 // Lowercase and strip spaces/punctuation so "Abu Hurairah" == "abu-hurairah".
 function normalize(text) {
@@ -23,7 +23,7 @@ export default function ClueScreen({
   notice,
   result,
   unlockedLetters = [],
-  onHint,
+  onRevealLetter,
   onCorrect,
   onSkipAnswer,
   onPhoto,
@@ -33,7 +33,13 @@ export default function ClueScreen({
 }) {
   const format = clue.answerFormat
   const answerLetters = format ? format.replace(/[^A-Za-z]/g, '').toUpperCase() : ''
-  const [letters, setLetters] = useState(() => Array(answerLetters.length).fill(''))
+  const revealed = result.revealedIdx || [] // letter indexes shown by "Reveal a letter"
+  const [letters, setLetters] = useState(() => {
+    const start = Array(answerLetters.length).fill('')
+    revealed.forEach((i) => (start[i] = answerLetters[i])) // keep reveals after a refresh
+    return start
+  })
+  const [revealNote, setRevealNote] = useState(null) // { id, index } for the "-3 pts" message
   const [answer, setAnswer] = useState('') // used only when a clue has no answerFormat
   const [wrong, setWrong] = useState(false)
   const [wrongCount, setWrongCount] = useState(0) // wrong submissions (each re-runs the shake)
@@ -63,6 +69,24 @@ export default function ClueScreen({
     const target = photoDone ? nextRef.current : photoRef.current
     target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [answered, photoDone])
+
+  // "Reveal a letter": fill the first empty box (left to right) with the right letter.
+  const nextEmpty = format ? letters.findIndex((l) => !l) : -1
+  const revealsLeft = Math.max(0, MAX_REVEALS_PER_CLUE - revealed.length)
+  const canReveal = Boolean(format) && !answered && nextEmpty !== -1 && revealsLeft > 0
+
+  function revealLetter() {
+    if (!canReveal) return
+    const i = nextEmpty
+    const next = [...letters]
+    next[i] = answerLetters[i]
+    setLetters(next)
+    setWrong(false)
+    onRevealLetter(i)
+    const id = Date.now()
+    setRevealNote({ id, index: i })
+    setTimeout(() => setRevealNote((n) => (n?.id === id ? null : n)), 2200)
+  }
 
   // Phrase box number for each gold letter position: { letterPosition: box }.
   const goldBoxes = Object.fromEntries(
@@ -118,17 +142,6 @@ export default function ClueScreen({
       <section className="card card-manuscript card-task">
         <p className="section-label section-label-gold">Your Task</p>
         <p>{clue.task}</p>
-        {clue.hint && (result.hintUsed || !answered) && (
-          <div className="hint">
-            {result.hintUsed ? (
-              <p className="hint-text">💡 {clue.hint}</p>
-            ) : (
-              <button className="link-btn" onClick={onHint}>
-                Need a hint? ({formatPoints(POINTS.hintUsed)} points)
-              </button>
-            )}
-          </div>
-        )}
       </section>
 
       <form className="card answer-form" onSubmit={checkAnswer}>
@@ -144,11 +157,35 @@ export default function ClueScreen({
               values={boxValues}
               goldBoxes={goldBoxes}
               status={boxStatus}
+              revealed={answered ? [] : revealed}
+              justRevealed={revealNote?.index ?? null}
               onChange={(next) => {
                 setLetters(next)
                 setWrong(false)
               }}
             />
+            {!answered && (
+              <div className="reveal-row">
+                {revealsLeft > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      className="reveal-btn"
+                      onClick={revealLetter}
+                      disabled={!canReveal}
+                    >
+                      🔍 Reveal a letter <span>({formatPoints(POINTS.letterRevealed)} pts)</span>
+                    </button>
+                    <span className="reveals-left">Reveals left: {revealsLeft}</span>
+                  </>
+                )}
+                {revealNote && (
+                  <span key={revealNote.id} className="reveal-note" role="status">
+                    {formatPoints(POINTS.letterRevealed)} pts · letter revealed
+                  </span>
+                )}
+              </div>
+            )}
             {!answered && Object.keys(goldBoxes).length > 0 && (
               <p className="lb-legend">
                 <span className="lb-legend-swatch" /> Gold letters build the mystery phrase
