@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { COUNTRIES } from '../data/countries.js'
 
-const MAX_MEMBERS = 8
+// Largest team one adventure covers (also shown on the landing page).
+export const MAX_MEMBERS = 8
 
 export default function TeamSetup({ onBack, onReady }) {
   const [teamName, setTeamName] = useState('')

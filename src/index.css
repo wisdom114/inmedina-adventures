@@ -125,30 +125,6 @@ p {
 
 /* ── Landing ──────────────────────────────────────── */
 
-.landing {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.landing-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 28px 24px calc(32px + env(safe-area-inset-bottom));
-  text-align: center;
-}
-
-.landing-text {
-  max-width: 340px;
-  font-size: 17px;
-  line-height: 1.7;
-  color: var(--ink);
-}
-
 /* ── Decorative divider ───────────────────────────── */
 
 .ornament {
@@ -1458,25 +1434,6 @@ input[type='text']:disabled {
   50% { opacity: 1; transform: rotate(22.5deg) scale(1); }
 }
 
-.landing-actions {
-  width: 100%;
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.landing-account {
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.landing-account .link-btn {
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 .auth-notice {
   padding: 12px 14px;
   border: 1px solid var(--gold);
@@ -1968,19 +1925,6 @@ input[type='text']:disabled {
   color: var(--muted);
 }
 
-/* Subtle "Already have an account? Log in" under the main button. */
-.landing-login {
-  margin-top: -6px;
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.landing-login .link-btn {
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 /* Timer shown in the Starting Point header once Start Hunt is tapped. */
 .start-timer {
   margin-top: 6px;
@@ -2318,4 +2262,368 @@ input[type='text']:disabled {
   .blocked-note {
     animation: none;
   }
+}
+
+/* ═════════════════════════════════════════════════════
+   Landing page — photo hero, stats, top teams
+   ═════════════════════════════════════════════════════ */
+
+.lp {
+  --lp-bg: #0f2d1a;
+  min-height: 100dvh;
+  background-color: var(--lp-bg);
+  background-image: var(--pattern-green);
+  color: var(--cream);
+  padding-bottom: calc(36px + env(safe-area-inset-bottom));
+}
+
+/* Hero: photo with the arch rising from the bottom.
+   Everything here is sized from the hero's WIDTH (fixed shape + cqw units), so the
+   arch tip always lands at the subject's chest — the face, cap and Green Dome stay
+   clear on every phone, tablet and laptop window. */
+.lp-hero {
+  position: relative;
+  aspect-ratio: 375 / 431;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+}
+
+.lp-hero-img {
+  position: absolute;
+  top: -24cqw; /* crops empty sky above the minarets, lifting the face and Dome */
+  left: 0;
+  width: 100%;
+  height: auto; /* natural proportions, anchored at the top */
+  z-index: -2;
+}
+
+.lp-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* light at the top for the status bar; darker low down so the palms and arch blend in */
+  background: linear-gradient(
+    180deg,
+    rgba(15, 45, 26, 0.35) 0%,
+    rgba(15, 45, 26, 0) 18%,
+    rgba(15, 45, 26, 0) 50%,
+    rgba(15, 45, 26, 0.55) 85%,
+    rgba(15, 45, 26, 0.75) 100%
+  );
+}
+
+.lp-title {
+  font-family: var(--serif);
+  font-size: clamp(46px, 14vw, 60px);
+  font-weight: 800;
+  line-height: 1.02;
+  color: #fffaf0;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.45);
+}
+
+.lp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 16px 22px;
+  text-align: center;
+}
+
+.lp-cta {
+  min-height: 58px;
+  font-size: 18px;
+}
+
+.lp-account {
+  font-size: 14px;
+  color: rgba(250, 246, 240, 0.72);
+}
+
+.lp-account .link-btn {
+  font-size: 14px;
+  color: var(--gold-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Stats */
+.lp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 8px 16px 0;
+}
+
+.lp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 108px;
+  padding: 14px 6px;
+  border: 1px solid rgba(212, 166, 70, 0.55);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(212, 166, 70, 0.12), rgba(212, 166, 70, 0.03));
+  box-shadow: inset 0 0 0 3px rgba(15, 45, 26, 0.6), inset 0 0 0 4px rgba(212, 166, 70, 0.18);
+  text-align: center;
+}
+
+.lp-stat-value {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--gold-text);
+}
+
+.lp-stat-icon {
+  font-size: 28px;
+}
+
+.lp-stat-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.lp-stat-note {
+  font-size: 11px;
+  color: rgba(250, 246, 240, 0.65);
+}
+
+.lp-ornament {
+  padding: 22px 24px 6px;
+}
+
+/* Top teams */
+.lp-board-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 16px 0;
+}
+
+.lp-board {
+  padding: 16px;
+  border: 1px solid rgba(212, 166, 70, 0.45);
+  border-radius: 10px;
+  background: rgba(250, 246, 240, 0.04);
+}
+
+.lp-board-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.lp-section-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.lp-board-all {
+  font-size: 14px;
+  color: var(--gold-text);
+}
+
+.lp-board-empty {
+  font-size: 15px;
+  font-style: italic;
+  color: rgba(250, 246, 240, 0.75);
+}
+
+.lp-board-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-board-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px dashed rgba(212, 166, 70, 0.3);
+}
+
+.lp-board-row:first-child {
+  border-top: none;
+}
+
+.lp-rank {
+  grid-row: span 2;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--green-ink);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+}
+
+.lp-board-row.is-top-2 .lp-rank {
+  background: linear-gradient(180deg, #e4e6e8, #b9bdc2);
+  color: #2f3438;
+}
+
+.lp-board-row.is-top-3 .lp-rank {
+  background: linear-gradient(180deg, #e2a66b, #b9773d);
+  color: #3a210a;
+}
+
+.lp-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.lp-team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-score {
+  grid-row: span 2;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gold-text);
+}
+
+.lp-score small {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: rgba(250, 246, 240, 0.6);
+}
+
+.lp-time {
+  font-size: 12px;
+  color: rgba(250, 246, 240, 0.65);
+}
+
+/* Outline button on the dark background. */
+.lp .btn-outline {
+  color: var(--gold-text);
+  border-color: var(--gold);
+}
+
+.lp .btn-outline:hover {
+  background: rgba(212, 166, 70, 0.12);
+}
+
+/* Arch and palms rising from the bottom of the hero photo. */
+.lp-arch {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px; /* no hairline gap against the content below */
+  aspect-ratio: 375 / 175; /* matches the HeroArch drawing */
+  pointer-events: none;
+}
+
+.lp-arch-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #0f2d1a; /* same as the page below, so the arch reads as one surface */
+  filter: drop-shadow(0 -4px 14px rgba(0, 0, 0, 0.25));
+}
+
+/* Title sits inside the arch (sizes in cqw = % of the hero width). */
+.lp-arch-text {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 6%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.lp-arch .lp-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  text-shadow: none;
+}
+
+.lp-title-brand {
+  font-size: 7cqw;
+  font-weight: 700;
+  color: #fffaf0;
+}
+
+.lp-title-main {
+  margin-top: 0.5cqw;
+  font-size: 12.8cqw;
+  font-weight: 800;
+  color: #fffaf0;
+}
+
+.lp-title-sub {
+  margin-top: 0.4cqw;
+  font-size: 8.6cqw;
+  font-weight: 700;
+  color: var(--gold-text);
+}
+
+.lp-title-rule {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  margin-top: 1.6cqw;
+  font-size: 3cqw;
+  line-height: 1;
+  color: var(--gold-bright);
+}
+
+.lp-title-rule i {
+  display: block;
+  width: 18cqw;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-bright));
+}
+
+.lp-title-rule i:last-child {
+  background: linear-gradient(90deg, var(--gold-bright), transparent);
+}
+
+.lp-tagline {
+  padding: 4px 16px 2px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--gold-text);
+}
+
+.lp-strapline {
+  padding: 0 24px 10px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.6;
+  color: rgba(250, 246, 240, 0.8);
 }
