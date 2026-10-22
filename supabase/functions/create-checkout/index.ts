@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment', // one-time, not a subscription
+      allow_promotion_codes: true, // shows an "Add promotion code" field on Stripe's checkout page
       line_items: [
         {
           quantity: 1,
